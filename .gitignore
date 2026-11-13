@@ -1,0 +1,22 @@
+# Environment & Secrets
+.env
+.env*.local
+
+# Next.js / Node
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+
+# Spring Boot / Java (Maven & Gradle)
+server/**/target/
+server/**/build/
+server/**/.gradle/
+*.jar
+*.war
+
+# IDEs & OS
+.idea/
+.vscode/
+*.iml
+.DS_Store

@@ -16,10 +16,12 @@ import {
 import Logo from "./logo";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { ThemeComponent } from "../ui/theme-component";
 
 type headerProps = {
   showSearch?: boolean;
   showSignin?: boolean;
+  showThemeToggle?: boolean;
 };
 
 type userType = "admin" | "user";
@@ -38,7 +40,11 @@ const accountMenuLinks: Record<userType, menuLinkItem[]> = {
   ],
 };
 
-const Header = ({ showSearch = true, showSignin = true }: headerProps) => {
+const Header = ({
+  showSearch = true,
+  showSignin = true,
+  showThemeToggle = true,
+}: headerProps) => {
   const pathname = usePathname();
   const userType: userType = pathname.startsWith("/admin") ? "admin" : "user";
   const currentMenuLink = accountMenuLinks[userType];
@@ -64,6 +70,7 @@ const Header = ({ showSearch = true, showSignin = true }: headerProps) => {
         {/* Signin */}
         <div className="flex items-center">
           {showSignin && <Button>Sign in</Button>}
+          {showThemeToggle && <ThemeComponent />}
 
           <div>
             <DropdownMenu>

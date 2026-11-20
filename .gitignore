@@ -20,3 +20,10 @@ server/**/.gradle/
 .vscode/
 *.iml
 .DS_Store
+
+server/**/build/
+server/**/target/
+
+# Ignore local secret property files
+**/application-local.properties
+**/application-secret.properties

@@ -27,3 +27,7 @@ server/**/target/
 # Ignore local secret property files
 **/application-local.properties
 **/application-secret.properties
+**/application-local.yaml
+**/application-local.yml
+**/application-secret.yaml
+**/application-secret.yml

@@ -1,13 +1,13 @@
 package com.cinematic.auth.model;
-
-import java.time.LocalDateTime;
-
 import com.cinematic.auth.enums.Role;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data 
+@Getter 
+@Setter
 @Entity 
 @Table(name = "users")
 public class User {
@@ -27,7 +27,8 @@ public class User {
     @Column (name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column (name = "role")
+    @Enumerated (EnumType.STRING)
+    @Column (name = "role", nullable = false)
     private Role role;
 
     @PrePersist 

@@ -1,43 +1,57 @@
 package com.cinematic.auth.controller;
 
-import java.util.*;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cinematic.auth.dto.request.SignupRequest;
 import com.cinematic.auth.dto.response.SignupResponse;
+import com.cinematic.auth.enums.Role;
+import com.cinematic.auth.model.User;
+import com.cinematic.auth.repository.UserRepository;
 import com.cinematic.auth.service.util.JwtService;
 
 import jakarta.validation.Valid;
-
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
-    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     @PostMapping("/signup")
-    public ResponseEntity<SignupResponse> signup(@RequestBody @Valid SignupRequest request) {
-        Authentication auth = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(
-                request.getEmail(),
-                request.getPassword()
-            )
-        );
+    public ResponseEntity<?> signup(@RequestBody @Valid SignupRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: Email is already in use!");
+        }
 
-        List<String> roles = auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        return ResponseEntity.ok(new SignupResponse(jwtService.generateToken(auth.getName(), roles)));
+        if (userRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error: Username is already taken!");
+        }
+
+        Role assignedRole = (request.getRole() != null) ? request.getRole() : Role.USER;
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(assignedRole);
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(
+                user.getEmail(),
+                user.getRole().name());
+
+        return ResponseEntity.ok(
+                new SignupResponse(user.getUsername(), user.getEmail(), token));
     }
-    
 }

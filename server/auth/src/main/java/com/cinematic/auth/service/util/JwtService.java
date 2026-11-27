@@ -1,5 +1,6 @@
 package com.cinematic.auth.service.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import javax.crypto.SecretKey;
@@ -18,19 +19,25 @@ public class JwtService {
     private final long expirationMs;
 
     public JwtService(
-        @Value("${jwt.service}") String secret,
+        @Value("${jwt.secret}") String secret,
         @Value("${jwt.expiration-ms}") long expirationMs
     ) {
-        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secret);
+        } catch (Exception e) {
+            keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        }
+        this.key = Keys.hmacShaKeyFor(keyBytes);
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(String email, List<String> roles) {
+    public String generateToken(String email, String role) {
         Date now = new Date();
 
         return Jwts.builder()
                 .subject(email)
-                .claim("roles", roles)
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + expirationMs))
                 .signWith(key)

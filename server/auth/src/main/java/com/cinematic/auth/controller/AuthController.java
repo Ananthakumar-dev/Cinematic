@@ -2,15 +2,18 @@ package com.cinematic.auth.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cinematic.auth.dto.request.LoginRequest;
 import com.cinematic.auth.dto.request.SignupRequest;
 import com.cinematic.auth.dto.response.SignupResponse;
 import com.cinematic.auth.enums.Role;
+import com.cinematic.auth.exception.UserNotFoundException;
 import com.cinematic.auth.model.User;
 import com.cinematic.auth.repository.UserRepository;
 import com.cinematic.auth.service.util.JwtService;
@@ -53,5 +56,19 @@ public class AuthController {
 
         return ResponseEntity.ok(
                 new SignupResponse(user.getUsername(), user.getEmail(), token));
+    }
+
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found! Please check email"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid Password");
+        }
+
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+
+        // we can reuse SignupResponse for this as well
+        return ResponseEntity.ok(new SignupResponse(user.getUsername(), user.getEmail(), token));
     }
 }
